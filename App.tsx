@@ -20,11 +20,11 @@ const App: React.FC = () => {
   // Derived Data
   const staffThreads = useMemo(() => {
     // Only show threads where I am the staff
-    return Object.values(threads).filter((t: Thread) => t.staffId === 'me');
+    return (Object.values(threads) as Thread[]).filter((t: Thread) => t.staffId === 'me');
   }, [threads]);
 
   const bookingList = useMemo(() => Object.values(BOOKINGS), []);
-  const adminThread = useMemo(() => Object.values(threads).find((t: Thread) => t.staffId === 'admin' && t.clientId === 'steve'), [threads]);
+  const adminThread = useMemo(() => (Object.values(threads) as Thread[]).find((t: Thread) => t.staffId === 'admin' && t.clientId === 'steve'), [threads]);
 
   // Actions
   const handleSendMessage = (text: string) => {
@@ -86,7 +86,7 @@ const App: React.FC = () => {
 
     // Send to all threads linked to this booking
     // This is the "Perfect" logic: 1 broadcast entry -> N worker threads
-    const affectedThreads = Object.values(threads).filter((t: Thread) => t.bookingId === booking.id);
+    const affectedThreads = (Object.values(threads) as Thread[]).filter((t: Thread) => t.bookingId === booking.id);
     
     const newMessages: Message[] = [];
     const updatedThreads = { ...threads };
@@ -133,7 +133,7 @@ const App: React.FC = () => {
   const getRelationshipData = (targetUserId: string) => {
     const user = USERS[targetUserId];
     // This is simplified for the prototype
-    const userThreads = Object.values(threads).filter((t: Thread) => t.clientId === targetUserId || t.staffId === targetUserId);
+    const userThreads = (Object.values(threads) as Thread[]).filter((t: Thread) => t.clientId === targetUserId || t.staffId === targetUserId);
     
     // Split into active/past for demo (using shift status)
     const active: { thread: Thread; shift: any }[] = [];

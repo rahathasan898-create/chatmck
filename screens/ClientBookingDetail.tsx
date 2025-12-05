@@ -43,7 +43,7 @@ export const ClientBookingDetail: React.FC<ClientBookingDetailProps> = ({
       const workerId = shift.assignedTo;
       
       if (!workersMap[workerId]) {
-        const thread = Object.values(threads).find((t: Thread) => 
+        const thread = (Object.values(threads) as Thread[]).find((t: Thread) => 
           t.bookingId === booking.id && t.staffId === workerId
         );
         
@@ -93,7 +93,7 @@ export const ClientBookingDetail: React.FC<ClientBookingDetailProps> = ({
   const broadcastMessages = useMemo(() => {
     return messages.filter(m => 
       m.type === MessageType.BROADCAST && 
-      Object.values(threads).some((t: Thread) => t.id === m.threadId && t.bookingId === booking.id)
+      (Object.values(threads) as Thread[]).some((t: Thread) => t.id === m.threadId && t.bookingId === booking.id)
     ).reduce((acc, current) => {
       const x = acc.find(item => item.content === current.content && Math.abs(new Date(item.timestamp).getTime() - new Date(current.timestamp).getTime()) < 1000); 
       if (!x) {

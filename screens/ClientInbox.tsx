@@ -33,7 +33,7 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
 
   // Analyze a booking to see if it has pending actions or unreads
   const analyzeBooking = (booking: Booking) => {
-    const bookingThreads = Object.values(threads).filter((t: Thread) => t.bookingId === booking.id);
+    const bookingThreads = (Object.values(threads) as Thread[]).filter((t: Thread) => t.bookingId === booking.id);
     const totalUnread = bookingThreads.reduce((acc, t) => acc + t.unreadCount, 0);
     
     let latestMsg: Message | undefined;
@@ -69,6 +69,24 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
 
   const adminStats = analyzeAdmin();
 
+  // --- Calculate Badge Counts per Scope ---
+  let projectActionCount = 0;
+  let projectUnreadCount = 0;
+  
+  bookings.forEach(b => {
+    if (b.id === 'booking-system') return;
+    const stats = analyzeBooking(b);
+    if (stats.hasPendingAction) projectActionCount++;
+    if (stats.totalUnread > 0) projectUnreadCount++;
+  });
+
+  const systemActionCount = adminStats?.hasPendingAction ? 1 : 0;
+  const systemUnreadCount = adminStats?.unreadCount && adminStats.unreadCount > 0 ? 1 : 0;
+
+  const totalActionCount = projectActionCount + systemActionCount;
+  const totalUnreadCount = projectUnreadCount + systemUnreadCount;
+
+
   // --- Filtering Logic ---
 
   // 1. Filter Bookings based on Scope AND Status
@@ -94,10 +112,6 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
       (activeFilter === 'ACTION' && adminStats && adminStats.hasPendingAction)
     )
   );
-
-  // Counts for Badges (Global, irrelevant of scope for the badge itself, but useful for context)
-  const actionCount = bookings.filter(b => analyzeBooking(b).hasPendingAction).length + (adminStats?.hasPendingAction ? 1 : 0);
-  const unreadCount = bookings.filter(b => analyzeBooking(b).totalUnread > 0).length + (adminStats?.unreadCount && adminStats.unreadCount > 0 ? 1 : 0);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -126,33 +140,36 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
         <div className="flex p-1 bg-zinc-100 rounded-xl">
           <button 
             onClick={() => setActiveScope('ALL')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeScope === 'ALL' 
                 ? 'bg-white text-zinc-900 shadow-sm' 
                 : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <LayoutGrid size={14} /> All
+            {totalActionCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
           </button>
           <button 
             onClick={() => setActiveScope('PROJECTS')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeScope === 'PROJECTS' 
                 ? 'bg-white text-zinc-900 shadow-sm' 
                 : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <Briefcase size={14} /> Projects
+            {projectActionCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
           </button>
           <button 
             onClick={() => setActiveScope('SYSTEM')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeScope === 'SYSTEM' 
                 ? 'bg-white text-zinc-900 shadow-sm' 
                 : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <Shield size={14} /> System
+            {systemActionCount > 0 && <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
           </button>
         </div>
 
@@ -171,9 +188,9 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
             }`}
           >
             Action Required
-            {actionCount > 0 && (
+            {totalActionCount > 0 && (
               <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${activeFilter === 'ACTION' ? 'bg-red-200 text-red-700' : 'bg-red-100 text-red-600'}`}>
-                {actionCount}
+                {totalActionCount}
               </span>
             )}
           </button>
@@ -187,9 +204,9 @@ export const ClientInbox: React.FC<ClientInboxProps> = ({
             }`}
           >
             Unread
-            {unreadCount > 0 && (
+            {totalUnreadCount > 0 && (
               <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${activeFilter === 'UNREAD' ? 'bg-blue-200 text-blue-700' : 'bg-blue-100 text-blue-600'}`}>
-                {unreadCount}
+                {totalUnreadCount}
               </span>
             )}
           </button>
