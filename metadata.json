@@ -1,0 +1,5 @@
+{
+  "name": "Connect",
+  "description": "A context-aware messaging hub prototype for the gig economy, separating conversations by shift and contract rather than just identity.",
+  "requestFramePermissions": []
+}
